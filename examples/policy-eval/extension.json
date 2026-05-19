@@ -1,0 +1,7 @@
+{
+  "name": "policy-eval",
+  "version": "0.1.0",
+  "runtime": "wazero",
+  "module": "policy_eval.wasm",
+  "exports": ["evaluate"]
+}

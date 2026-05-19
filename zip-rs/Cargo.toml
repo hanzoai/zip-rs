@@ -1,0 +1,24 @@
+[package]
+name = "zip-rs"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Write zip-mounted wasm handlers in idiomatic Rust (HIP-0105 ABI)."
+readme = "../README.md"
+keywords = ["wasm", "webassembly", "hanzo", "extension", "handler"]
+categories = ["wasm", "development-tools"]
+
+[dependencies]
+zip-rs-macros = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[lib]
+name = "zip_rs"
+path = "src/lib.rs"
+
+[features]
+default = []

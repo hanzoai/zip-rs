@@ -1,0 +1,122 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  fmt:
+    runs-on: hanzo-build-linux-amd64
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - run: cargo fmt --all -- --check
+
+  clippy:
+    runs-on: hanzo-build-linux-amd64
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+
+  test:
+    runs-on: hanzo-build-linux-amd64
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test -p zip-rs --no-fail-fast
+      - run: cargo test -p zip-rs-macros --no-fail-fast
+
+  wasm:
+    runs-on: hanzo-build-linux-amd64
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-wasip1
+      - uses: Swatinem/rust-cache@v2
+      - name: Build examples
+        run: |
+          cargo build --release --target wasm32-wasip1 \
+            -p zip-rs-example-hello \
+            -p zip-rs-example-validate-email \
+            -p zip-rs-example-policy-eval
+      - name: Inspect exports
+        run: |
+          for f in target/wasm32-wasip1/release/hello.wasm \
+                   target/wasm32-wasip1/release/validate.wasm \
+                   target/wasm32-wasip1/release/policy_eval.wasm; do
+            echo "=== $f ($(stat -c '%s' "$f") bytes) ==="
+            test -f "$f"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wasm-artifacts
+          path: |
+            target/wasm32-wasip1/release/hello.wasm
+            target/wasm32-wasip1/release/validate.wasm
+            target/wasm32-wasip1/release/policy_eval.wasm
+          if-no-files-found: error
+          retention-days: 30
+
+  integration:
+    needs: wasm
+    runs-on: hanzo-build-linux-amd64
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: zip-rs
+      - uses: actions/checkout@v4
+        with:
+          repository: hanzoai/base
+          path: base
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.3'
+          cache: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: wasm-artifacts
+          path: zip-rs/wasm-artifacts
+      - name: Stage wasm next to extension.json
+        run: |
+          cp zip-rs/wasm-artifacts/hello.wasm zip-rs/examples/hello/hello.wasm
+          cp zip-rs/wasm-artifacts/validate.wasm zip-rs/examples/validate-email/validate.wasm
+          cp zip-rs/wasm-artifacts/policy_eval.wasm zip-rs/examples/policy-eval/policy_eval.wasm
+      - name: Install integration harness into base
+        run: |
+          mkdir -p base/cmd/zip-rs-integration
+          cp zip-rs/tools/wasmvm-run/main.go base/cmd/zip-rs-integration/main.go
+      - name: Run hello
+        working-directory: base
+        run: |
+          go run ./cmd/zip-rs-integration ../zip-rs/examples/hello \
+            hello '{"name":"world"}'
+      - name: Run validate-email
+        working-directory: base
+        run: |
+          go run ./cmd/zip-rs-integration ../zip-rs/examples/validate-email \
+            validate '{"email":"Foo@Example.COM ","age":25}' \
+            validate '{"email":"bad","age":25}' \
+            validate '{"age":25}' \
+            validate '{"email":"a@b.com","age":200}'
+      - name: Run policy-eval
+        working-directory: base
+        run: |
+          go run ./cmd/zip-rs-integration ../zip-rs/examples/policy-eval \
+            evaluate '{"subject":"alice","action":"read","resource":"public:docs"}' \
+            evaluate '{"subject":"alice","action":"write","resource":"alice:doc1"}' \
+            evaluate '{"subject":"bob","action":"delete","resource":"alice:doc1"}' \
+            evaluate '{"subject":"root","action":"x","resource":"y"}'
