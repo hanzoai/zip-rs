@@ -12,7 +12,7 @@ env:
 
 jobs:
   fmt:
-    runs-on: hanzo-build-linux-amd64
+    runs-on: [self-hosted, linux, amd64]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -21,7 +21,7 @@ jobs:
       - run: cargo fmt --all -- --check
 
   clippy:
-    runs-on: hanzo-build-linux-amd64
+    runs-on: [self-hosted, linux, amd64]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -31,7 +31,7 @@ jobs:
       - run: cargo clippy --workspace --all-targets -- -D warnings
 
   test:
-    runs-on: hanzo-build-linux-amd64
+    runs-on: [self-hosted, linux, amd64]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -40,7 +40,7 @@ jobs:
       - run: cargo test -p zip-rs-macros --no-fail-fast
 
   wasm:
-    runs-on: hanzo-build-linux-amd64
+    runs-on: [self-hosted, linux, amd64]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -73,7 +73,7 @@ jobs:
 
   integration:
     needs: wasm
-    runs-on: hanzo-build-linux-amd64
+    runs-on: [self-hosted, linux, amd64]
     steps:
       - uses: actions/checkout@v4
         with:
