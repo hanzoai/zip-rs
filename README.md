@@ -1,3 +1,5 @@
+<p align="center"><img src=".github/hero.svg" alt="zip-rs" width="880"></p>
+
 # zip-rs
 
 Write zip-mounted wasm extensions in idiomatic Rust.
