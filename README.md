@@ -163,4 +163,4 @@ pyvm host runtimes can load.
 
 ## License
 
-BSD-3-Clause. See `LICENSE`.
+Licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option — per HIP-0137.
