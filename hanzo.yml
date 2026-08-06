@@ -1,0 +1,20 @@
+# Canonical CI/CD config for hanzoai/zip-rs — read by the hanzoai/ci reusable
+# (.hanzo/workflows/cicd.yml) and by platform.hanzo.ai.
+#
+# A Rust workspace of two published crates (zip-rs, zip-rs-macros) plus three
+# wasm example crates: ships from a tag to crates.io, builds no image, so no
+# `images:` and no `deploy:`.
+#
+# The three gates are the repo's own (.github/workflows/ci.yml), in the order
+# that fails cheapest first. `cargo test` names the two library crates rather
+# than --workspace because the examples/ members are wasm32 targets — CI builds
+# them with --target wasm32-unknown-unknown, and testing them on the host would
+# fail for the target, not for the code.
+
+test:
+  - name: fmt
+    run: cargo fmt --all -- --check
+  - name: clippy
+    run: cargo clippy --workspace --all-targets -- -D warnings
+  - name: test
+    run: cargo test -p zip-rs -p zip-rs-macros
