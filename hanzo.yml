@@ -5,16 +5,25 @@
 # wasm example crates: ships from a tag to crates.io, builds no image, so no
 # `images:` and no `deploy:`.
 #
-# The three gates are the repo's own (.github/workflows/ci.yml), in the order
-# that fails cheapest first. `cargo test` names the two library crates rather
-# than --workspace because the examples/ members are wasm32 targets — CI builds
-# them with --target wasm32-unknown-unknown, and testing them on the host would
-# fail for the target, not for the code.
+# `rustup component add` first, because the toolchain this workflow provisions
+# (dtolnay/rust-toolchain@stable) installs the compiler ALONE — no rustfmt, no
+# clippy — and a gate whose tool is missing dies with
+# "'cargo-fmt' is not installed for the toolchain" before it ever reads the
+# code. That is a red run that says nothing about the repo, which is worse than
+# no run. The repo's own ci.yml buys the same thing with `components:` on the
+# toolchain action; this buys it from inside the gate, since the provision step
+# above is not ours to configure. Both adds are idempotent.
+#
+# The three gates are the repo's own (.github/workflows/ci.yml), cheapest
+# first. `cargo test` names the two library crates rather than --workspace
+# because the examples/ members are wasm32 targets — CI builds them with
+# --target wasm32-unknown-unknown, and testing them on the host would fail for
+# the target, not for the code.
 
 test:
   - name: fmt
-    run: cargo fmt --all -- --check
+    run: rustup component add rustfmt && cargo fmt --all -- --check
   - name: clippy
-    run: cargo clippy --workspace --all-targets -- -D warnings
+    run: rustup component add clippy && cargo clippy --workspace --all-targets -- -D warnings
   - name: test
     run: cargo test -p zip-rs -p zip-rs-macros
