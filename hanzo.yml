@@ -27,3 +27,13 @@ test:
     run: rustup component add clippy && cargo clippy --workspace --all-targets -- -D warnings
   - name: test
     run: cargo test -p zip-rs -p zip-rs-macros
+  - name: wasm
+    # The examples are the product: extensions compiled to wasm32-wasip1 and
+    # loaded by the host runtime. Building them is what proves a change to the
+    # macros or the ABI has not broken the target the crates exist to hit.
+    run: |
+      rustup target add wasm32-wasip1
+      cargo build --release --target wasm32-wasip1 \
+        -p zip-rs-example-hello \
+        -p zip-rs-example-validate-email \
+        -p zip-rs-example-policy-eval
