@@ -1,5 +1,7 @@
 # zip-rs
 
+[![Open in Hanzo](https://hanzo.app/badges/open-in-hanzo.svg)](https://hanzo.app/dev/open?repo=github.com/hanzoai/zip-rs&ref=main&action=open) [![Edit with Hanzo](https://hanzo.app/badges/edit-with-hanzo.svg)](https://hanzo.app/dev/open?repo=github.com/hanzoai/zip-rs&ref=main&action=edit) [![Deploy with Hanzo](https://hanzo.app/badges/deploy-with-hanzo.svg)](https://hanzo.app/dev/open?repo=github.com/hanzoai/zip-rs&ref=main&action=deploy)
+
 Write zip-mounted wasm extensions in idiomatic Rust.
 
 `zip-rs` hides the HIP-0105 wasm calling convention (`__base_alloc` /
